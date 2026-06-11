@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pattern Login</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #070a12;
+        --panel: #101624;
+        --panel-2: #151d2f;
+        --text: #eef4ff;
+        --muted: #94a3b8;
+        --line: #243047;
+        --accent: #42d392;
+        --accent-2: #38bdf8;
+        --danger: #fb7185;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 20px;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at 15% 10%, rgba(56, 189, 248, 0.16), transparent 28%),
+          radial-gradient(circle at 85% 90%, rgba(66, 211, 146, 0.14), transparent 30%),
+          var(--bg);
+        color: var(--text);
+      }
+
+      main {
+        width: min(100%, 420px);
+        padding: 24px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: linear-gradient(180deg, rgba(21, 29, 47, 0.96), rgba(16, 22, 36, 0.96));
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+      }
+
+      h1 {
+        margin: 0 0 6px;
+        font-size: 26px;
+        line-height: 1.1;
+      }
+
+      p {
+        margin: 0 0 22px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #cbd5e1;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      input {
+        width: 100%;
+        min-height: 48px;
+        padding: 0 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        outline: none;
+        background: #0b1020;
+        color: var(--text);
+        font-size: 16px;
+      }
+
+      input:focus {
+        border-color: var(--accent-2);
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+      }
+
+      .dots {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 22px 0;
+      }
+
+      @keyframes shakeDots {
+        0%, 100% { transform: translateX(0); }
+        20% { transform: translateX(-8px); }
+        40% { transform: translateX(8px); }
+        60% { transform: translateX(-6px); }
+        80% { transform: translateX(6px); }
+      }
+
+      .dots.shake {
+        animation: shakeDots 360ms ease;
+      }
+
+      .dots.error .dot.filled {
+        border-color: var(--danger);
+        background: var(--danger);
+        box-shadow: 0 0 18px rgba(251, 113, 133, 0.35);
+      }
+
+      .dots.success .dot.filled {
+        border-color: var(--accent);
+        background: var(--accent);
+        box-shadow: 0 0 20px rgba(66, 211, 146, 0.45);
+        animation: flashGreen 600ms ease;
+      }
+
+      @keyframes flashGreen {
+        0%, 100% { transform: scale(1.22); filter: brightness(1); }
+        45% { transform: scale(1.45); filter: brightness(1.35); }
+      }
+
+      .dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 1px solid #475569;
+        background: #111827;
+        transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+      }
+
+      .dot.filled {
+        border-color: var(--accent);
+        background: var(--accent);
+        transform: scale(1.22);
+      }
+
+      .dpad {
+        display: grid;
+        grid-template-columns: repeat(3, 72px);
+        grid-template-rows: repeat(3, 58px);
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 22px;
+      }
+
+      .dpad button,
+      .actions button {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--text);
+        background: var(--panel-2);
+        font: inherit;
+        font-weight: 800;
+        cursor: pointer;
+        touch-action: manipulation;
+        transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+      }
+
+      .dpad button {
+        min-height: 58px;
+        font-size: 24px;
+      }
+
+      .dpad button:active,
+      .actions button:active {
+        transform: translateY(1px) scale(0.98);
+      }
+
+      .dpad button:hover,
+      .actions button:hover {
+        border-color: #3b82f6;
+        background: #1b2942;
+      }
+
+      .dpad button:disabled,
+      .actions button:disabled {
+        cursor: not-allowed;
+        opacity: 0.58;
+        transform: none;
+      }
+
+      .slot-top {
+        grid-column: 2;
+        grid-row: 1;
+      }
+
+      .slot-left {
+        grid-column: 1;
+        grid-row: 2;
+      }
+
+      .slot-right {
+        grid-column: 3;
+        grid-row: 2;
+      }
+
+      .slot-bottom {
+        grid-column: 2;
+        grid-row: 3;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .actions button {
+        min-height: 46px;
+        font-size: 15px;
+      }
+
+      .clear {
+        grid-column: 1 / -1;
+        color: #cbd5e1;
+      }
+
+      .primary {
+        background: linear-gradient(180deg, #15803d, #166534) !important;
+        border-color: #22c55e !important;
+      }
+
+      .secondary {
+        background: linear-gradient(180deg, #0369a1, #075985) !important;
+        border-color: #38bdf8 !important;
+      }
+
+      .message {
+        min-height: 22px;
+        margin-top: 16px;
+        text-align: center;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .message.success {
+        color: var(--accent);
+      }
+
+      .message.error {
+        color: var(--danger);
+      }
+
+      @media (max-width: 380px) {
+        main {
+          padding: 18px;
+        }
+
+        .dpad {
+          grid-template-columns: repeat(3, 64px);
+          grid-template-rows: repeat(3, 54px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Pattern Access</h1>
+      <p>Enter your roll number and press five arrows.</p>
+
+      <label for="rollNo">Roll no</label>
+      <input id="rollNo" type="text" autocomplete="username" placeholder="e.g. CSE-001" style="text-transform: uppercase;" />
+
+      <div class="dots" aria-label="Pattern progress">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+
+      <div class="dpad" aria-label="Pattern arrows"></div>
+
+      <div class="actions">
+        <button class="clear" type="button" id="clearBtn">Clear</button>
+        <button class="primary" type="button" id="registerBtn">Register</button>
+        <button class="secondary" type="button" id="loginBtn">Login</button>
+      </div>
+
+      <div class="message" id="message" role="status" aria-live="polite"></div>
+    </main>
+
+    <script>
+      const rollInput = document.getElementById("rollNo");
+      const dotsWrap = document.querySelector(".dots");
+      const dots = [...document.querySelectorAll(".dot")];
+      const dpad = document.querySelector(".dpad");
+      let arrowButtons = [];
+      const actionButtons = [...document.querySelectorAll(".actions button")];
+      const message = document.getElementById("message");
+      const maxPatternLength = 5;
+      let pattern = "";
+      let countdownTimer = null;
+      let inactivityTimer = null;
+      let isSubmitting = false;
+      const API_BASE = "https://study-ally-2-0.onrender.com";
+
+      rollInput.addEventListener('input', () => {
+        rollInput.value = rollInput.value.toUpperCase()
+      })
+
+      const fallbackArrows = [
+        { key: "U", label: "&uarr;", ariaLabel: "Up" },
+        { key: "L", label: "&larr;", ariaLabel: "Left" },
+        { key: "R", label: "&rarr;", ariaLabel: "Right" },
+        { key: "D", label: "&darr;", ariaLabel: "Down" },
+      ];
+      const dpadSlots = ["slot-top", "slot-left", "slot-right", "slot-bottom"];
+
+      function setMessage(text, type) {
+        message.textContent = text;
+        message.className = `message ${type || ""}`.trim();
+      }
+
+      function stopCountdown() {
+        if (countdownTimer) {
+          clearInterval(countdownTimer);
+          countdownTimer = null;
+        }
+      }
+
+      function stopInactivityTimer() {
+        if (inactivityTimer) {
+          clearTimeout(inactivityTimer);
+          inactivityTimer = null;
+        }
+      }
+
+      function scheduleAutoClear() {
+        stopInactivityTimer();
+
+        if (!pattern || isSubmitting) return;
+
+        inactivityTimer = setTimeout(() => {
+          pattern = "";
+          setMessage("", "");
+          renderDots();
+        }, 3000);
+      }
+
+      function setSubmitting(submitting) {
+        isSubmitting = submitting;
+        arrowButtons.forEach((button) => {
+          button.disabled = submitting;
+        });
+        actionButtons.forEach((button) => {
+          button.disabled = submitting;
+        });
+      }
+
+      function clearDotState() {
+        dotsWrap.classList.remove("shake", "error", "success");
+      }
+
+      function shakeDotsRed() {
+        clearDotState();
+        void dotsWrap.offsetWidth;
+        dotsWrap.classList.add("error");
+        dotsWrap.classList.add("shake");
+      }
+
+      function flashDotsGreen() {
+        clearDotState();
+        void dotsWrap.offsetWidth;
+        dotsWrap.classList.add("success");
+      }
+
+      function startRateLimitCountdown(seconds) {
+        let remaining = Math.max(1, Number(seconds) || 30);
+        stopCountdown();
+        setMessage(`Too many attempts. Try again in ${remaining}s.`, "error");
+
+        countdownTimer = setInterval(() => {
+          remaining -= 1;
+
+          if (remaining <= 0) {
+            stopCountdown();
+            setMessage("You can try again now.", "");
+            return;
+          }
+
+          setMessage(`Too many attempts. Try again in ${remaining}s.`, "error");
+        }, 1000);
+      }
+
+      function renderArrowButtons(arrows) {
+        dpad.innerHTML = "";
+
+        arrows.slice(0, 4).forEach((arrow, index) => {
+          const button = document.createElement("button");
+          button.className = dpadSlots[index];
+          button.type = "button";
+          button.dataset.key = arrow.key;
+          button.ariaLabel = arrow.ariaLabel || arrow.key;
+          button.innerHTML = arrow.label || arrow.key;
+          button.addEventListener("click", () => addArrow(button.dataset.key));
+          dpad.appendChild(button);
+        });
+
+        arrowButtons = [...dpad.querySelectorAll("button")];
+      }
+
+      async function loadConfig() {
+        try {
+          const response = await fetch(`${API_BASE}/api/config`, {
+            method: "GET",
+            credentials: "include",
+          });
+          const data = await response.json();
+          renderArrowButtons(Array.isArray(data.arrows) ? data.arrows : fallbackArrows);
+        } catch (error) {
+          renderArrowButtons(fallbackArrows);
+          setMessage("Server not reachable: " + error.message, "error");
+        }
+      }
+
+      function renderDots() {
+        if (!pattern) {
+          clearDotState();
+        }
+
+        dots.forEach((dot, index) => {
+          dot.classList.toggle("filled", index < pattern.length);
+        });
+      }
+
+      function addArrow(key) {
+        if (isSubmitting) return;
+        if (pattern.length >= maxPatternLength) return;
+        stopCountdown();
+        clearDotState();
+        pattern += key;
+        setMessage("", "");
+        renderDots();
+        scheduleAutoClear();
+      }
+
+      function clearPattern(keepMessage = false) {
+        stopCountdown();
+        stopInactivityTimer();
+        clearDotState();
+        pattern = "";
+        if (!keepMessage) {
+          setMessage("", "");
+        }
+        renderDots();
+      }
+
+      async function submitPattern(endpoint) {
+        if (isSubmitting) return;
+
+        const savedRollNo = rollInput.value;
+        const roll_no = rollInput.value.trim();
+
+        if (!roll_no) {
+          setMessage("Enter your roll no first.", "error");
+          shakeDotsRed();
+          rollInput.focus();
+          return;
+        }
+
+        if (pattern.length !== maxPatternLength) {
+          setMessage("Press exactly 5 arrows.", "error");
+          shakeDotsRed();
+          return;
+        }
+
+        try {
+          stopCountdown();
+          stopInactivityTimer();
+          setSubmitting(true);
+          setMessage("Checking...", "");
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ roll_no, pattern }),
+          });
+
+          let data = {};
+          try {
+            data = await response.json();
+          } catch (_) {}
+
+          if (!response.ok) {
+            shakeDotsRed();
+            rollInput.value = savedRollNo;
+
+            if (response.status === 429) {
+              startRateLimitCountdown(data.retry_after_seconds);
+              return;
+            }
+
+            const attemptsText =
+              typeof data.remaining_attempts === "number"
+                ? ` ${data.remaining_attempts} attempts left.`
+                : "";
+            setMessage(`${data.message || data.error || "Request failed."}${attemptsText}`, "error");
+            setTimeout(() => clearPattern(true), 420);
+            return;
+          }
+
+          flashDotsGreen();
+          setMessage(`Welcome ${roll_no}!`, "success");
+          setTimeout(() => {
+            rollInput.value = "";
+            clearPattern(true);
+          }, 900)
+          setTimeout(() => {
+            window.location.href = '/app'
+          }, 1000)
+        } catch (error) {
+          shakeDotsRed();
+          rollInput.value = savedRollNo;
+          setMessage("Server not reachable: " + error.message, "error");
+          setTimeout(() => clearPattern(true), 420);
+        } finally {
+          setSubmitting(false);
+        }
+      }
+
+      document.getElementById("clearBtn").addEventListener("click", () => clearPattern());
+      document.getElementById("registerBtn").addEventListener("click", () => submitPattern('https://study-ally-2-0.onrender.com/api/register'));
+      document.getElementById("loginBtn").addEventListener("click", () => submitPattern('https://study-ally-2-0.onrender.com/api/login'));
+
+      document.addEventListener("keydown", (event) => {
+        const keys = {
+          ArrowUp: "U",
+          ArrowDown: "D",
+          ArrowLeft: "L",
+          ArrowRight: "R",
+        };
+
+        if (keys[event.key] && !isSubmitting) {
+          event.preventDefault();
+          addArrow(keys[event.key]);
+        }
+      });
+
+      loadConfig();
+    </script>
+  </body>
+</html>

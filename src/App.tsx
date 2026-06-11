@@ -4,9 +4,9 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { 
-  Sparkles, LayoutDashboard, BrainCircuit, Calendar, FileText, 
-  Clock, ShieldAlert, Trophy, Settings, Flame, Star, GraduationCap 
+import {
+  Sparkles, LayoutDashboard, BrainCircuit, Calendar, FileText,
+  Clock, ShieldAlert, Trophy, Settings, Flame, Star, GraduationCap
 } from "lucide-react";
 
 // Components imports
@@ -26,7 +26,6 @@ import { Subject, Task, SemesterItem, StudyNote, Flashcard, JournalEntry, StudyS
 import { calculateSubjectPriority, generateSmartLocalSchedule } from "./utils/localPlanner";
 
 export default function App() {
-  // Navigation active tab State setup
   const [activeTab, setActiveTab] = useState<string>("dashboard");
 
   // --- Core State Entities ---
@@ -38,7 +37,7 @@ export default function App() {
   const [journals, setJournals] = useState<JournalEntry[]>([]);
   const [logs, setLogs] = useState<StudySessionLog[]>([]);
   const [streak, setStreak] = useState<number>(0);
-  
+
   // Custom Planner preference indicators
   const [availableHours, setAvailableHours] = useState<number>(3);
   const [focusPreference, setFocusPreference] = useState<'morning' | 'afternoon' | 'night'>('morning');
@@ -237,11 +236,11 @@ export default function App() {
   const handleDeleteSubject = (id: string) => {
     const nextSubs = subjects.filter(s => s.id !== id);
     saveSubjects(nextSubs);
-    
+
     // Clear dependencies cascades
     const nextSems = semesters.filter(sem => sem.subjectId !== id);
     saveSemesters(nextSems);
-    
+
     const nextFcs = flashcards.filter(fc => fc.subjectId !== id);
     saveFlashcards(nextFcs);
 
@@ -269,7 +268,7 @@ export default function App() {
       if (t.id === taskId) {
         // Toggle completed status
         const isNowDone = !t.completed;
-        
+
         // If task completed has a linked subject, update completedUnits inside subjects
         if (t.subjectId) {
           const correspondingSub = subjects.find(s => s.id === t.subjectId);
@@ -316,7 +315,7 @@ export default function App() {
 
   const handleLogRevisionFeedback = (subjectId: string, difficulty: 'E' | 'M' | 'H') => {
     const todayStr = new Date().toISOString().split('T')[0];
-    
+
     // Log academic study minutes to logs database automatically
     const isAlreadyStudiedDate = logs.some(l => l.date === todayStr && l.subjectId === subjectId);
     if (!isAlreadyStudiedDate) {
@@ -489,34 +488,68 @@ export default function App() {
     setFocusPreference("morning");
   };
 
+  // Show main dashboard directly
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200">
-      
+
       {/* Outer viewport centering container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
+
         {/* Banner quote and dynamic values */}
-        <Header 
-          streak={streak} 
-          theme={theme} 
-          onToggleTheme={handleToggleTheme}
-          onQuickBackup={() => {
-            const data = { subjects, semesters, notes, journals, version: "2.5" };
-            alert(`Saves synchronized! Copy study records payload:\n\n${JSON.stringify(data)}`);
-          }}
-          totalFinishedCount={subjects.filter(s => s.completedUnits >= s.totalUnits && s.totalUnits > 0).length}
-        />
+        <div className="mb-8 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm transition-colors duration-200">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+
+            {/* Title Brand & Advice */}
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="p-2 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400">
+                  <Sparkles className="w-6 h-6 animate-pulse" />
+                </span>
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                  Study Ally
+                </h1>
+                <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-violet-100 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300">
+                  PRO v2.5
+                </span>
+              </div>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 italic font-medium">
+                Welcome back to your study command center.
+              </p>
+            </div>
+
+            {/* Global Stats, Theme Mode, Backup controls */}
+            <div className="flex flex-wrap items-center gap-3 sm:self-center">
+
+              {/* Active streak */}
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold bg-amber-500 text-white shadow-md shadow-amber-500/10 hover:scale-105 transition-transform duration-150">
+                <Flame className="w-4 h-4 fill-current animate-bounce" />
+                <span>Streak {streak} Days</span>
+              </div>
+
+              {/* Theme switcher */}
+              <button
+                onClick={handleToggleTheme}
+                className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                title="Toggle theme appearance"
+              >
+                {theme === "light" ? "🌙" : "☀️"}
+              </button>
+
+            </div>
+
+          </div>
+        </div>
 
         {/* Master Flex / grid responsive partition */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
+
           {/* Executive sidebar rail */}
           <nav className="lg:col-span-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl space-y-2 select-none shadow-sm flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-2 lg:gap-0">
-            
+
             <button
               onClick={() => setActiveTab("dashboard")}
               className={`w-full flex items-center gap-3 px-4.5 py-3 text-xs font-extrabold rounded-xl text-left transition duration-150 flex-shrink-0 ${
-                activeTab === "dashboard" 
+                activeTab === "dashboard"
                   ? "bg-violet-600 text-white shadow-sm"
                   : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-400"
               }`}
@@ -528,7 +561,7 @@ export default function App() {
             <button
               onClick={() => setActiveTab("planner")}
               className={`w-full flex items-center gap-3 px-4.5 py-3 text-xs font-extrabold rounded-xl text-left transition duration-150 flex-shrink-0 ${
-                activeTab === "planner" 
+                activeTab === "planner"
                   ? "bg-violet-600 text-white shadow-sm"
                   : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-400"
               }`}
@@ -540,7 +573,7 @@ export default function App() {
             <button
               onClick={() => setActiveTab("revisions")}
               className={`w-full flex items-center gap-3 px-4.5 py-3 text-xs font-extrabold rounded-xl text-left transition duration-150 flex-shrink-0 ${
-                activeTab === "revisions" 
+                activeTab === "revisions"
                   ? "bg-violet-600 text-white shadow-sm"
                   : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-400"
               }`}
@@ -552,7 +585,7 @@ export default function App() {
             <button
               onClick={() => setActiveTab("semesters")}
               className={`w-full flex items-center gap-3 px-4.5 py-3 text-xs font-extrabold rounded-xl text-left transition duration-150 flex-shrink-0 ${
-                activeTab === "semesters" 
+                activeTab === "semesters"
                   ? "bg-violet-600 text-white shadow-sm"
                   : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-400"
               }`}
@@ -564,7 +597,7 @@ export default function App() {
             <button
               onClick={() => setActiveTab("materials")}
               className={`w-full flex items-center gap-3 px-4.5 py-3 text-xs font-extrabold rounded-xl text-left transition duration-150 flex-shrink-0 ${
-                activeTab === "materials" 
+                activeTab === "materials"
                   ? "bg-violet-600 text-white shadow-sm"
                   : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-400"
               }`}
@@ -576,7 +609,7 @@ export default function App() {
             <button
               onClick={() => setActiveTab("coach")}
               className={`w-full flex items-center gap-3 px-4.5 py-3 text-xs font-extrabold rounded-xl text-left transition duration-150 flex-shrink-0 relative ${
-                activeTab === "coach" 
+                activeTab === "coach"
                   ? "bg-violet-600 text-white shadow-sm"
                   : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-400"
               }`}
@@ -589,7 +622,7 @@ export default function App() {
             <button
               onClick={() => setActiveTab("focus")}
               className={`w-full flex items-center gap-3 px-4.5 py-3 text-xs font-extrabold rounded-xl text-left transition duration-150 flex-shrink-0 ${
-                activeTab === "focus" 
+                activeTab === "focus"
                   ? "bg-violet-600 text-white shadow-sm"
                   : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-400"
               }`}
@@ -601,7 +634,7 @@ export default function App() {
             <button
               onClick={() => setActiveTab("analytics")}
               className={`w-full flex items-center gap-3 px-4.5 py-3 text-xs font-extrabold rounded-xl text-left transition duration-150 flex-shrink-0 ${
-                activeTab === "analytics" 
+                activeTab === "analytics"
                   ? "bg-violet-600 text-white shadow-sm"
                   : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-400"
               }`}
@@ -613,7 +646,7 @@ export default function App() {
             <button
               onClick={() => setActiveTab("settings")}
               className={`w-full flex items-center gap-3 px-4.5 py-3 text-xs font-extrabold rounded-xl text-left transition duration-150 flex-shrink-0 ${
-                activeTab === "settings" 
+                activeTab === "settings"
                   ? "bg-violet-600 text-white shadow-sm"
                   : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-400"
               }`}
@@ -663,7 +696,6 @@ export default function App() {
                 subjects={subjects}
                 onLogRevisionFeedback={handleLogRevisionFeedback}
                 onRefreshRevisions={() => {
-                  // Simply triggers State refresh triggers
                   setSubjects([...subjects]);
                   alert("Spaced repetition decay stages updated!");
                 }}

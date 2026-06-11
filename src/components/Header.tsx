@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { Sparkles, Moon, Sun, Flame, Trophy } from "lucide-react";
+import { Sparkles, Moon, Sun, Flame, Trophy, LogOut } from "lucide-react";
 
 interface HeaderProps {
   streak: number;
@@ -12,6 +12,8 @@ interface HeaderProps {
   onToggleTheme: () => void;
   onQuickBackup: () => void;
   totalFinishedCount: number;
+  onLogout?: () => void;
+  user?: { name: string; rollNo: string } | null;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -20,6 +22,8 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleTheme,
   onQuickBackup,
   totalFinishedCount,
+  onLogout,
+  user,
 }) => {
   // Diverse set of academic inspiration quotes
   const quotes = [
@@ -62,7 +66,16 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Global Stats, Theme Mode, Backup controls */}
         <div className="flex flex-wrap items-center gap-3 sm:self-center">
-          
+
+          {/* User info */}
+          {user && (
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+              <span>{user.name}</span>
+              <span className="text-slate-400">•</span>
+              <span className="text-slate-600 dark:text-slate-400">{user.rollNo}</span>
+            </div>
+          )}
+
           {/* Quick Stats */}
           {totalFinishedCount > 0 && (
             <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">
@@ -95,6 +108,17 @@ export const Header: React.FC<HeaderProps> = ({
           >
             Backup
           </button>
+
+          {/* Logout button */}
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              className="p-2.5 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition"
+              title="Logout and return to login page"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
       </div>
