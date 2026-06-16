@@ -385,6 +385,28 @@ app.post("/api/gemini/plan", async (req, res) => {
   }
 });
 
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(process.cwd(), "admin.html"));
+});
+
+app.get("/admin/users", (req, res) => {
+  const adminKey = req.query.key;
+  if (adminKey !== process.env.ADMIN_KEY) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const users = patternDb.prepare("SELECT roll_no, created_at FROM users").all();
+  res.json(users);
+});
+
+app.get("/admin/logs", (req, res) => {
+  const adminKey = req.query.key;
+  if (adminKey !== process.env.ADMIN_KEY) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const logs = patternDb.prepare("SELECT * FROM login_attempts ORDER BY timestamp DESC LIMIT 100").all();
+  res.json(logs);
+});
+
 // Configure Vite or Serve static assets
 async function startWebapp() {
   app.get("/", (req, res) => {

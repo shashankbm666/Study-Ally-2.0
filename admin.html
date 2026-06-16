@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Study Ally Admin</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #070a12;
+        --panel: #101624;
+        --panel-2: #151d2f;
+        --text: #eef4ff;
+        --muted: #94a3b8;
+        --line: #243047;
+        --accent: #42d392;
+        --accent-2: #38bdf8;
+        --danger: #fb7185;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        padding: 20px;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at 15% 10%, rgba(56, 189, 248, 0.16), transparent 28%),
+          radial-gradient(circle at 85% 90%, rgba(66, 211, 146, 0.14), transparent 30%),
+          var(--bg);
+        color: var(--text);
+      }
+
+      .screen {
+        min-height: calc(100vh - 40px);
+        display: grid;
+        place-items: center;
+      }
+
+      .card,
+      .dashboard {
+        width: min(100%, 980px);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: linear-gradient(180deg, rgba(21, 29, 47, 0.96), rgba(16, 22, 36, 0.96));
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+      }
+
+      .card {
+        max-width: 420px;
+        padding: 24px;
+      }
+
+      .dashboard {
+        padding: 22px;
+      }
+
+      h1 {
+        margin: 0 0 6px;
+        font-size: 26px;
+        line-height: 1.1;
+      }
+
+      p {
+        margin: 0 0 22px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #cbd5e1;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      input,
+      button {
+        font: inherit;
+      }
+
+      input {
+        width: 100%;
+        min-height: 46px;
+        padding: 0 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        outline: none;
+        background: #0b1020;
+        color: var(--text);
+        font-size: 15px;
+      }
+
+      input:focus {
+        border-color: var(--accent-2);
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+      }
+
+      button {
+        min-height: 44px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--text);
+        background: var(--panel-2);
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+      }
+
+      button:hover {
+        border-color: #3b82f6;
+        background: #1b2942;
+      }
+
+      button:active {
+        transform: translateY(1px) scale(0.98);
+      }
+
+      .primary {
+        width: 100%;
+        margin-top: 14px;
+        background: linear-gradient(180deg, #15803d, #166534);
+        border-color: #22c55e;
+      }
+
+      .message {
+        min-height: 22px;
+        margin-top: 14px;
+        text-align: center;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--danger);
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .count {
+        color: var(--accent);
+        font-weight: 900;
+      }
+
+      .tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 18px 0;
+      }
+
+      .tab.active {
+        background: linear-gradient(180deg, #0369a1, #075985);
+        border-color: var(--accent-2);
+      }
+
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .toolbar input {
+        max-width: 320px;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 560px;
+      }
+
+      th,
+      td {
+        padding: 13px 14px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        font-size: 14px;
+      }
+
+      th {
+        color: #cbd5e1;
+        background: rgba(11, 16, 32, 0.75);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .status-success {
+        color: var(--accent);
+        font-weight: 900;
+      }
+
+      .status-failed,
+      .status-blocked {
+        color: var(--danger);
+        font-weight: 900;
+      }
+
+      @media (max-width: 640px) {
+        .dashboard,
+        .card {
+          padding: 18px;
+        }
+
+        .topbar,
+        .toolbar {
+          display: block;
+        }
+
+        .toolbar input {
+          max-width: none;
+          margin-top: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="screen" id="passwordScreen">
+      <form class="card" id="passwordForm">
+        <h1>Admin Access</h1>
+        <p>Enter the admin password to view members and login activity.</p>
+
+        <label for="adminPassword">Password</label>
+        <input id="adminPassword" type="password" autocomplete="current-password" />
+        <button class="primary" type="submit">Open Dashboard</button>
+        <div class="message" id="passwordMessage" role="status" aria-live="polite"></div>
+      </form>
+    </section>
+
+    <main class="dashboard hidden" id="dashboard">
+      <div class="topbar">
+        <div>
+          <h1>Study Ally Admin</h1>
+          <p>Registered members and recent pattern login attempts.</p>
+        </div>
+        <div class="count" id="summaryCount">0 members</div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" type="button" data-tab="members">Members</button>
+        <button class="tab" type="button" data-tab="logs">Login Logs</button>
+      </div>
+
+      <section id="membersPanel">
+        <div class="toolbar">
+          <strong>Members</strong>
+          <input id="memberSearch" type="search" placeholder="Search roll no" />
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Roll No</th>
+                <th>Registered Date</th>
+              </tr>
+            </thead>
+            <tbody id="membersBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="logsPanel" class="hidden">
+        <div class="toolbar">
+          <strong>Login Logs</strong>
+          <span class="muted">Most recent first</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Roll No</th>
+                <th>Time</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="logsBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const API_BASE = "https://study-ally-2-0.onrender.com";
+      const passwordScreen = document.getElementById("passwordScreen");
+      const passwordForm = document.getElementById("passwordForm");
+      const passwordInput = document.getElementById("adminPassword");
+      const passwordMessage = document.getElementById("passwordMessage");
+      const dashboard = document.getElementById("dashboard");
+      const summaryCount = document.getElementById("summaryCount");
+      const membersBody = document.getElementById("membersBody");
+      const logsBody = document.getElementById("logsBody");
+      const memberSearch = document.getElementById("memberSearch");
+      const membersPanel = document.getElementById("membersPanel");
+      const logsPanel = document.getElementById("logsPanel");
+      const tabs = [...document.querySelectorAll(".tab")];
+
+      let adminKey = "";
+      let members = [];
+      let logs = [];
+
+      function formatDate(value) {
+        if (!value) return "-";
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+      }
+
+      function renderMembers() {
+        const query = memberSearch.value.trim().toUpperCase();
+        const filtered = members.filter((member) =>
+          String(member.roll_no || "").toUpperCase().includes(query)
+        );
+
+        summaryCount.textContent = `${members.length} member${members.length === 1 ? "" : "s"}`;
+        membersBody.innerHTML = filtered.length
+          ? filtered.map((member) => `
+              <tr>
+                <td>${member.roll_no || "-"}</td>
+                <td>${formatDate(member.created_at)}</td>
+              </tr>
+            `).join("")
+          : `<tr><td colspan="2" class="muted">No members found.</td></tr>`;
+      }
+
+      function getLogStatus(log) {
+        const errorText = String(log.error || log.status || "").toLowerCase();
+        if (errorText.includes("block") || log.blocked) {
+          return { text: "🚫 Blocked", className: "status-blocked" };
+        }
+        if (Number(log.success) === 1 || log.success === true) {
+          return { text: "✅ Success", className: "status-success" };
+        }
+        return { text: "❌ Failed", className: "status-failed" };
+      }
+
+      function renderLogs() {
+        logsBody.innerHTML = logs.length
+          ? logs.map((log) => {
+              const status = getLogStatus(log);
+              return `
+                <tr>
+                  <td>${log.roll_no || "-"}</td>
+                  <td>${formatDate(log.timestamp)}</td>
+                  <td class="${status.className}">${status.text}</td>
+                </tr>
+              `;
+            }).join("")
+          : `<tr><td colspan="3" class="muted">No login logs found.</td></tr>`;
+      }
+
+      async function fetchJson(path) {
+        const response = await fetch(`${API_BASE}${path}?key=${encodeURIComponent(adminKey)}`);
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || data.message || "Request failed");
+        }
+        return data;
+      }
+
+      async function loadDashboard() {
+        passwordMessage.textContent = "Loading...";
+        const [usersData, logsData] = await Promise.all([
+          fetchJson("/admin/users"),
+          fetchJson("/admin/logs"),
+        ]);
+
+        members = Array.isArray(usersData) ? usersData : [];
+        logs = Array.isArray(logsData) ? logsData : [];
+        renderMembers();
+        renderLogs();
+        passwordScreen.classList.add("hidden");
+        dashboard.classList.remove("hidden");
+        passwordMessage.textContent = "";
+      }
+
+      passwordForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        adminKey = passwordInput.value.trim();
+
+        if (!adminKey) {
+          passwordMessage.textContent = "Enter admin password.";
+          return;
+        }
+
+        try {
+          await loadDashboard();
+        } catch (error) {
+          passwordMessage.textContent = error.message || "Unable to open dashboard.";
+        }
+      });
+
+      memberSearch.addEventListener("input", renderMembers);
+
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          tabs.forEach((item) => item.classList.remove("active"));
+          tab.classList.add("active");
+
+          const showMembers = tab.dataset.tab === "members";
+          membersPanel.classList.toggle("hidden", !showMembers);
+          logsPanel.classList.toggle("hidden", showMembers);
+        });
+      });
+    </script>
+  </body>
+</html>

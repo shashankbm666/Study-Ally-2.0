@@ -535,6 +535,10 @@
           event.preventDefault();
           addArrow(keys[event.key]);
         }
+
+        if (event.ctrlKey && event.shiftKey && event.key === 'A') {
+          window.open('/admin', '_blank');
+        }
       });
 
       loadConfig();
