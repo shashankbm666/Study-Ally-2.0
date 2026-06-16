@@ -4,7 +4,7 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import { createHash, createHmac, randomBytes } from "crypto";
-import Database from "better-sqlite3";
+import { createClient } from "@libsql/client";
 
 dotenv.config();
 
@@ -13,26 +13,32 @@ const PORT = process.env.PORT || 3000;
 const MAX_FAILED_ATTEMPTS = 5;
 const BLOCK_MS = 30 * 1000;
 const JWT_SECRET = process.env.JWT_SECRET || "change-this-pattern-login-secret";
-const DB_PATH = process.env.DB_PATH || path.join(process.cwd(), "pattern_login.sqlite");
 
-const patternDb = new Database(DB_PATH);
+const db = createClient({
+  url: process.env.TURSO_URL!,
+  authToken: process.env.TURSO_TOKEN!,
+});
 const failedAttempts = new Map<string, { count: number; blockedUntil: number }>();
 
-patternDb.pragma("journal_mode = WAL");
-patternDb.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    roll_no TEXT PRIMARY KEY,
-    hashed_pattern TEXT NOT NULL,
-    created_at TEXT NOT NULL
-  );
+async function initializeDatabase() {
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS users (
+      roll_no TEXT PRIMARY KEY,
+      hashed_pattern TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      banned INTEGER DEFAULT 0
+    )
+  `);
 
-  CREATE TABLE IF NOT EXISTS login_attempts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    roll_no TEXT NOT NULL,
-    timestamp TEXT NOT NULL,
-    success INTEGER NOT NULL
-  );
-`);
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS login_attempts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      roll_no TEXT NOT NULL,
+      timestamp TEXT NOT NULL,
+      success INTEGER NOT NULL
+    )
+  `);
+}
 
 app.use(express.json());
 
@@ -96,11 +102,14 @@ function shuffleArrows() {
   return arrows;
 }
 
-function logLoginAttempt(rollNo: string, success: boolean) {
-  patternDb.prepare(`
-    INSERT INTO login_attempts (roll_no, timestamp, success)
-    VALUES (?, ?, ?)
-  `).run(rollNo, new Date().toISOString(), success ? 1 : 0);
+async function logLoginAttempt(rollNo: string, success: boolean) {
+  await db.execute({
+    sql: `
+      INSERT INTO login_attempts (roll_no, timestamp, success)
+      VALUES (?, ?, ?)
+    `,
+    args: [rollNo, new Date().toISOString(), success ? 1 : 0],
+  });
 }
 
 function getFailureState(rollNo: string) {
@@ -147,32 +156,38 @@ function validatePatternPayload(req: express.Request, res: express.Response) {
   return { rollNo, pattern };
 }
 
-app.get("/api/config", (req, res) => {
+app.get("/api/config", async (req, res) => {
   res.json({ arrows: shuffleArrows() });
 });
 
-app.post("/api/register", (req, res) => {
+app.post("/api/register", async (req, res) => {
   const payload = validatePatternPayload(req, res);
   if (!payload) return;
 
   const { rollNo, pattern } = payload;
-  const existing = patternDb.prepare("SELECT roll_no FROM users WHERE roll_no = ?").get(rollNo);
+  const existing = (await db.execute({
+    sql: "SELECT roll_no FROM users WHERE roll_no = ?",
+    args: [rollNo],
+  })).rows[0];
 
   if (existing) {
     return res.status(409).json({ error: "roll_no already registered" });
   }
 
-  patternDb.prepare(`
-    INSERT INTO users (roll_no, hashed_pattern, created_at)
-    VALUES (?, ?, ?)
-  `).run(rollNo, hashPattern(pattern), new Date().toISOString());
+  await db.execute({
+    sql: `
+      INSERT INTO users (roll_no, hashed_pattern, created_at)
+      VALUES (?, ?, ?)
+    `,
+    args: [rollNo, hashPattern(pattern), new Date().toISOString()],
+  });
 
   failedAttempts.delete(rollNo);
   res.status(201).json({ success: true, message: "Registered successfully" });
 });
 
 // REST API endpoint: Login Authentication
-app.post("/api/login", (req, res) => {
+app.post("/api/login", async (req, res) => {
   try {
     if ("roll_no" in req.body || "pattern" in req.body) {
       const payload = validatePatternPayload(req, res);
@@ -183,7 +198,7 @@ app.post("/api/login", (req, res) => {
 
       if (state.blockedUntil && state.blockedUntil > Date.now()) {
         const retryAfter = Math.ceil((state.blockedUntil - Date.now()) / 1000);
-        logLoginAttempt(rollNo, false);
+        await logLoginAttempt(rollNo, false);
         return res.status(429).json({
           error: `Too many failed attempts. Try again in ${retryAfter} seconds.`,
           retry_after_seconds: retryAfter,
@@ -191,11 +206,14 @@ app.post("/api/login", (req, res) => {
         });
       }
 
-      const user = patternDb.prepare("SELECT hashed_pattern FROM users WHERE roll_no = ?").get(rollNo);
+      const user = (await db.execute({
+        sql: "SELECT hashed_pattern FROM users WHERE roll_no = ?",
+        args: [rollNo],
+      })).rows[0] as any;
 
       if (!user || user.hashed_pattern !== hashPattern(pattern)) {
         const failure = recordFailedAttempt(rollNo);
-        logLoginAttempt(rollNo, false);
+        await logLoginAttempt(rollNo, false);
 
         if (failure.blockedUntil) {
           const retryAfter = Math.ceil((failure.blockedUntil - Date.now()) / 1000);
@@ -213,7 +231,7 @@ app.post("/api/login", (req, res) => {
       }
 
       failedAttempts.delete(rollNo);
-      logLoginAttempt(rollNo, true);
+      await logLoginAttempt(rollNo, true);
       const token = createSessionToken(rollNo);
 
       res.cookie("session_token", token, {
@@ -385,31 +403,37 @@ app.post("/api/gemini/plan", async (req, res) => {
   }
 });
 
-app.get("/admin", (req, res) => {
+app.get("/admin", async (req, res) => {
   res.sendFile(path.join(process.cwd(), "admin.html"));
 });
 
-app.get("/admin/users", (req, res) => {
-  const adminKey = req.query.key;
-  if (adminKey !== process.env.ADMIN_KEY) {
+app.get("/admin/users", async (req, res) => {
+  if (req.query.key !== process.env.ADMIN_KEY) {
     return res.status(401).json({ error: "Unauthorized" });
   }
-  const users = patternDb.prepare("SELECT roll_no, created_at FROM users").all();
+  const users = (await db.execute({
+    sql: "SELECT roll_no, created_at FROM users",
+    args: [],
+  })).rows;
   res.json(users);
 });
 
-app.get("/admin/logs", (req, res) => {
-  const adminKey = req.query.key;
-  if (adminKey !== process.env.ADMIN_KEY) {
+app.get("/admin/logs", async (req, res) => {
+  if (req.query.key !== process.env.ADMIN_KEY) {
     return res.status(401).json({ error: "Unauthorized" });
   }
-  const logs = patternDb.prepare("SELECT * FROM login_attempts ORDER BY timestamp DESC LIMIT 100").all();
+  const logs = (await db.execute({
+    sql: "SELECT * FROM login_attempts ORDER BY timestamp DESC LIMIT 100",
+    args: [],
+  })).rows;
   res.json(logs);
 });
 
 // Configure Vite or Serve static assets
 async function startWebapp() {
-  app.get("/", (req, res) => {
+  await initializeDatabase();
+
+  app.get("/", async (req, res) => {
     res.sendFile(path.join(process.cwd(), "pattern-login.html"));
   });
 
@@ -422,7 +446,7 @@ async function startWebapp() {
   } else {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
-    app.get("*", (req, res) => {
+    app.get("*", async (req, res) => {
       if (req.path.startsWith('/api')) {
         return res.status(404).json({ error: 'API route not found' });
       }
