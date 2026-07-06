@@ -145,14 +145,14 @@ export default function App() {
     }
 
     // Streak, hours, focus prefs
-    const sVal = localStorage.getItem("sa_streak_c") || "4";
-    setStreak(parseInt(sVal) || 4);
+   const sVal = localStorage.getItem("sa_streak_c");
 
-    const hVal = localStorage.getItem("sa_hours_c") || "3";
-    setAvailableHours(parseInt(hVal) || 3);
-
-    const fpVal = localStorage.getItem("sa_fpref_c") || "morning";
-    setFocusPreference(fpVal as any);
+if (sVal !== null) {
+  setStreak(parseInt(sVal, 10) || 0);
+} else {
+  setStreak(0);
+  localStorage.setItem("sa_streak_c", "0");
+}
 
     // Hydrate Theme preferences
     const thVal = localStorage.getItem("sa_theme_c") || "light";
@@ -208,15 +208,23 @@ export default function App() {
 
   // --- UI Action Handlers ---
   const handleToggleTheme = () => {
-    const next = theme === "light" ? "dark" : "light";
-    setTheme(next);
-    localStorage.setItem("sa_theme_c", next);
-    if (next === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  };
+  console.log("Toggle clicked");
+  console.log("Current theme:", theme);
+
+  const next = theme === "light" ? "dark" : "light";
+  console.log("Next theme:", next);
+
+  setTheme(next);
+  localStorage.setItem("sa_theme_c", next);
+
+  if (next === "dark") {
+    document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
+  }
+
+  console.log("HTML classes:", document.documentElement.className);
+};
 
   const handleAddSubject = (name: string, total: number, done: number, date: string) => {
     const fresh: Subject = {
