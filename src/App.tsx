@@ -20,6 +20,7 @@ import { MaterialsTab } from "./components/MaterialsTab";
 import { SemesterTab } from "./components/SemesterTab";
 import { FocusTab } from "./components/FocusTab";
 import { SettingsTab } from "./components/SettingsTab";
+import { ManageSubjectModal } from "./components/ManageSubjectModal";
 
 // Models & utility imports
 import { Subject, Task, SemesterItem, StudyNote, Flashcard, JournalEntry, StudySessionLog } from "./types";
@@ -38,6 +39,8 @@ export default function App() {
   const [journals, setJournals] = useState<JournalEntry[]>([]);
   const [logs, setLogs] = useState<StudySessionLog[]>([]);
   const [streak, setStreak] = useState<number>(0);
+  const [manageSubjectOpen, setManageSubjectOpen] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   
   // Custom Planner preference indicators
   const [availableHours, setAvailableHours] = useState<number>(3);
@@ -257,6 +260,23 @@ if (sVal !== null) {
     saveNotes(nextNotes);
   };
 
+// Manage Subject Handler
+// Opens the Manage Subject modal for the selected subject.
+const handleManageSubject = (subject: Subject) => {
+  setSelectedSubject(subject);
+  setManageSubjectOpen(true);
+};
+
+  const handleUpdateSubject = (updatedSubject: Subject) => {
+    const nextSubjects = subjects.map(subject =>
+        subject.id === updatedSubject.id
+            ? updatedSubject
+            : subject
+    );
+
+    saveSubjects(nextSubjects);
+};
+  
   const handleUpdateSubjectProgress = (id: string, completedUnits: number) => {
     const next = subjects.map(s => {
       if (s.id === id) {
@@ -642,6 +662,7 @@ if (sVal !== null) {
                 onDeleteSubject={handleDeleteSubject}
                 onUpdateSubjectProgress={handleUpdateSubjectProgress}
                 onNavigateToTab={(tabId) => setActiveTab(tabId)}
+                onManageSubject={handleManageSubject}
               />
             )}
 
@@ -744,7 +765,13 @@ if (sVal !== null) {
         </div>
 
       </div>
-
+              <ManageSubjectModal
+                subject={selectedSubject}
+                isOpen={manageSubjectOpen}
+                onClose={() => setManageSubjectOpen(false)}
+                onSave={handleUpdateSubject}
+                onDelete={handleDeleteSubject}
+              />
     </div>
   );
 }
