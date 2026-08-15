@@ -20,6 +20,7 @@ import { MaterialsTab } from "./components/MaterialsTab";
 import { SemesterTab } from "./components/SemesterTab";
 import { FocusTab } from "./components/FocusTab";
 import { SettingsTab } from "./components/SettingsTab";
+import { ManageSubjectModal } from "./components/ManageSubjectModal";
 
 // Models & utility imports
 import { Subject, Task, SemesterItem, StudyNote, Flashcard, JournalEntry, StudySessionLog } from "./types";
@@ -70,6 +71,9 @@ export default function App() {
   const [logs, setLogs] = useState<StudySessionLog[]>([]);
   const [streak, setStreak] = useState<number>(0);
 
+  const [manageSubjectOpen, setManageSubjectOpen] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  
   // Custom Planner preference indicators
   const [availableHours, setAvailableHours] = useState<number>(3);
   const [focusPreference, setFocusPreference] = useState<'morning' | 'afternoon' | 'night'>('morning');
@@ -130,12 +134,41 @@ export default function App() {
 
     const sVal = localStorage.getItem("sa_streak_c") || "4";
     setStreak(parseInt(sVal) || 4);
+    // Hydrate journals
+    const rawJournals = localStorage.getItem("sa_journals_c");
+    if (rawJournals) {
+      setJournals(JSON.parse(rawJournals));
+    } else {
+      const defaultJournals: JournalEntry[] = [
+        { id: "j-1", date: offsetDate(-1), notes: "Solved Operating system mutual exclusion semaphores correctly today. Verified Discrete Probability proofs easily and logged 25 min Pomodoro block.", understandingRating: 4 }
+      ];
+      setJournals(defaultJournals);
+      localStorage.setItem("sa_journals_c", JSON.stringify(defaultJournals));
+    }
 
-    const hVal = localStorage.getItem("sa_hours_c") || "3";
-    setAvailableHours(parseInt(hVal) || 3);
+    // Hydrate logs session
+    const rawLogs = localStorage.getItem("sa_logs_c");
+    if (rawLogs) {
+      setLogs(JSON.parse(rawLogs));
+    } else {
+      const defaultLogs: StudySessionLog[] = [
+        { date: offsetDate(-2), minutes: 25, subjectId: "s-1", difficultyRating: "M" },
+        { date: offsetDate(-1), minutes: 50, subjectId: "s-2", difficultyRating: "M" },
+        { date: offsetDate(0), minutes: 25, subjectId: "s-3", difficultyRating: "E" }
+      ];
+      setLogs(defaultLogs);
+      localStorage.setItem("sa_logs_c", JSON.stringify(defaultLogs));
+    }
 
-    const fpVal = localStorage.getItem("sa_fpref_c") || "morning";
-    setFocusPreference(fpVal as any);
+    // Streak, hours, focus prefs
+   const sVal = localStorage.getItem("sa_streak_c");
+
+if (sVal !== null) {
+  setStreak(parseInt(sVal, 10) || 0);
+} else {
+  setStreak(0);
+  localStorage.setItem("sa_streak_c", "0");
+}
 
     const thVal = localStorage.getItem("sa_theme_c") || "light";
     setTheme(thVal as any);
@@ -148,15 +181,23 @@ export default function App() {
 
   // --- UI Action Handlers ---
   const handleToggleTheme = () => {
-    const next = theme === "light" ? "dark" : "light";
-    setTheme(next);
-    localStorage.setItem("sa_theme_c", next);
-    if (next === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  };
+  console.log("Toggle clicked");
+  console.log("Current theme:", theme);
+
+  const next = theme === "light" ? "dark" : "light";
+  console.log("Next theme:", next);
+
+  setTheme(next);
+  localStorage.setItem("sa_theme_c", next);
+
+  if (next === "dark") {
+    document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
+  }
+
+  console.log("HTML classes:", document.documentElement.className);
+};
 
   const handleAddSubject = (name: string, total: number, done: number, date: string) => {
     const fresh: Subject = {
@@ -181,6 +222,23 @@ export default function App() {
     saveNotes(notes.filter(n => n.subjectId !== id));
   };
 
+// Manage Subject Handler
+// Opens the Manage Subject modal for the selected subject.
+const handleManageSubject = (subject: Subject) => {
+  setSelectedSubject(subject);
+  setManageSubjectOpen(true);
+};
+
+  const handleUpdateSubject = (updatedSubject: Subject) => {
+    const nextSubjects = subjects.map(subject =>
+        subject.id === updatedSubject.id
+            ? updatedSubject
+            : subject
+    );
+
+    saveSubjects(nextSubjects);
+};
+  
   const handleUpdateSubjectProgress = (id: string, completedUnits: number) => {
     const next = subjects.map(s => {
       if (s.id === id) {
@@ -483,6 +541,7 @@ export default function App() {
                 onAddSubject={handleAddSubject} onDeleteSubject={handleDeleteSubject}
                 onUpdateSubjectProgress={handleUpdateSubjectProgress}
                 onNavigateToTab={(tabId) => setActiveTab(tabId)}
+                onManageSubject={handleManageSubject}
               />
             )}
             {activeTab === "planner" && (
@@ -539,6 +598,13 @@ export default function App() {
 
         </div>
       </div>
+              <ManageSubjectModal
+                subject={selectedSubject}
+                isOpen={manageSubjectOpen}
+                onClose={() => setManageSubjectOpen(false)}
+                onSave={handleUpdateSubject}
+                onDelete={handleDeleteSubject}
+              />
     </div>
   );
 }

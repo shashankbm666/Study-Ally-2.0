@@ -4,9 +4,9 @@
  */
 
 import React from "react";
-import { 
-  Plus, Calendar, Trash2, CheckCircle2, TrendingUp, AlertCircle, 
-  HelpCircle, ChevronRight, Activity, BookOpen, Clock, AlertTriangle 
+import {   
+  Plus,Calendar,Trash2,MoreVertical,Edit3,Copy,Archive,CheckCircle2,TrendingUp,AlertCircle,
+  HelpCircle,ChevronRight,Activity,BookOpen,Clock,AlertTriangle
 } from "lucide-react";
 import { Subject, SemesterItem } from "../types";
 import { getDaysRemaining, calculateSubjectPriority } from "../utils/localPlanner";
@@ -18,6 +18,7 @@ interface DashboardTabProps {
   onDeleteSubject: (id: string) => void;
   onUpdateSubjectProgress: (id: string, completedUnits: number) => void;
   onNavigateToTab: (tabId: string) => void;
+  onManageSubject: (subject: Subject) => void;
 }
 
 export const DashboardTab: React.FC<DashboardTabProps> = ({
@@ -27,11 +28,13 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   onDeleteSubject,
   onUpdateSubjectProgress,
   onNavigateToTab,
+  onManageSubject,
 }) => {
   // Modal toggle state for new subject addition
   const [showAddForm, setShowAddForm] = React.useState(false);
   const [name, setName] = React.useState("");
   const [totalUnits, setTotalUnits] = React.useState("10");
+  const [activeMenu, setActiveMenu] = React.useState<string | null>(null);
   const [completedUnits, setCompletedUnits] = React.useState("0");
   const [examDate, setExamDate] = React.useState("");
 
@@ -322,10 +325,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                       onDeleteSubject(s.id);
                     }
                   }}
-                  className="relative group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 select-none overflow-hidden"
+                  className="relative group p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 select-none overflow-visible "
                 >
                   {/* Top Subject card descriptor line */}
-                  <div className="flex justify-between items-start gap-3 mb-2">
+                  <div className="flex justify-between items-start gap-6 pr-10 mb-2">
                     <h3 className="font-extrabold text-slate-800 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400 transition truncate" title="Double click to remove">
                       {s.name}
                     </h3>
@@ -348,7 +351,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                       className={`h-full rounded-full transition-all duration-300 ${
                         percentage >= 75 ? "bg-emerald-500" : percentage >= 40 ? "bg-amber-500" : "bg-indigo-500"
                       }`}
-                      style={{ width: `${percentage}%` }}
+                      style={{ width: 0% `${percentage}%` }}
                     />
                   </div>
 
@@ -384,15 +387,60 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   </div>
 
                   {/* Hover trash icons so mobile / single clickers can perform deletion visually */}
-                  <button 
-                    onClick={() => {
-                      if (confirm(`Remove "${s.name}"?`)) onDeleteSubject(s.id);
-                    }}
-                    className="absolute top-3 right-3 p-1 rounded-lg text-slate-300 hover:text-rose-500 dark:hover:text-rose-400 bg-white/80 dark:bg-slate-900/80 opacity-0 group-hover:opacity-100 transition duration-150"
-                    title="Delete subject"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="absolute top-3 right-2 z-50">
+  <button
+    onClick={() =>
+      setActiveMenu(activeMenu === s.id ? null : s.id)
+    }
+    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+  >
+    <MoreVertical className="w-4 h-4 text-slate-500" />
+  </button>
+
+  {activeMenu === s.id && (
+    <div className="absolute right-0 mt-2 w-52 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl overflow-hidden z-50">
+
+      <button
+  onClick={() => {
+    onManageSubject(s);
+    setActiveMenu(null);
+  }}
+  className="flex w-full items-center gap-3 px-4 py-3 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+>
+  <Edit3 className="w-4 h-4" />
+  Manage Subject
+      </button>
+
+      <button
+        className="flex w-full items-center gap-3 px-4 py-3 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+      >
+        <Copy className="w-4 h-4" />
+        Duplicate Subject
+      </button>
+
+      <button
+        className="flex w-full items-center gap-3 px-4 py-3 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+      >
+        <Archive className="w-4 h-4" />
+        Archive Subject
+      </button>
+
+      <button
+        onClick={() => {
+          if (confirm(`Remove "${s.name}"?`)) {
+            onDeleteSubject(s.id);
+          }
+          setActiveMenu(null);
+        }}
+        className="flex w-full items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+      >
+        <Trash2 className="w-4 h-4" />
+        Delete Subject
+      </button>
+
+    </div>
+  )}
+</div>
                 </div>
               );
             })}
