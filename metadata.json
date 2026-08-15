@@ -1,6 +1,0 @@
-{
-  "name": "Study Ally",
-  "description": "An elegant, AI-powered study planner and spaced-repetition assistant.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

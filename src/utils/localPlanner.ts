@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Subject, Task, SemesterItem, StudySessionLog } from "../types";
+import { Subject, Task, SemesterItem } from "../types";
 
 /**
  * Calculates current days remaining from today till ISO date string
@@ -221,29 +221,3 @@ export function getForgettingCurveStats(lastStudied: string | null, stage: numbe
   };
 }
 
-/**
- * Generates mock heatmap data for a 7-day grid or a full 12-month log system
- */
-export function generateMockHeatmapLog(logs: StudySessionLog[], daysCount = 84): Record<string, number> {
-  const result: Record<string, number> = {};
-  
-  // Seed dates ending today
-  const today = new Date();
-  for (let i = 0; i < daysCount; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    const dateStr = d.toISOString().split('T')[0];
-    result[dateStr] = 0;
-  }
-
-  // Accumulate minutes from logs
-  logs.forEach(log => {
-    if (result[log.date] !== undefined) {
-      result[log.date] += log.minutes;
-    } else {
-      result[log.date] = log.minutes;
-    }
-  });
-
-  return result;
-}

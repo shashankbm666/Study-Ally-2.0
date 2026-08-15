@@ -53,18 +53,6 @@ export interface StudyNote {
   updatedAt: string;
 }
 
-export interface QuizQuestion {
-  question: string;
-  options: string[];
-  correctIndex: number;
-}
-
-export interface TopicQuiz {
-  subjectId: string;
-  topicName: string;
-  questions: QuizQuestion[];
-}
-
 export interface StudySessionLog {
   date: string; // YYYY-MM-DD
   minutes: number;
@@ -77,15 +65,4 @@ export interface JournalEntry {
   date: string; // YYYY-MM-DD
   notes: string;
   understandingRating: number; // 1 to 5
-}
-
-export interface StreakData {
-  count: number;
-  lastStudyDate: string | null;
-}
-
-export interface UserPreferences {
-  theme: 'light' | 'dark';
-  dailyAvailableHours: number;
-  focusTimePreference: 'morning' | 'afternoon' | 'night';
 }
