@@ -128,11 +128,11 @@ export default function App() {
       { date: offsetDate(0), minutes: 25, subjectId: "s-3", difficultyRating: "E" }
     ]);
 
-    const sVal = localStorage.getItem("sa_streak_c") || "4";
-    setStreak(parseInt(sVal) || 4);
+    const streakVal = localStorage.getItem("sa_streak_c") || "4";
+    setStreak(parseInt(streakVal) || 4);
 
-    const hVal = localStorage.getItem("sa_hours_c") || "3";
-    setAvailableHours(parseInt(hVal) || 3);
+    const hoursVal = localStorage.getItem("sa_hours_c") || "3";
+    setAvailableHours(parseInt(hoursVal) || 3);
 
     const fpVal = localStorage.getItem("sa_fpref_c") || "morning";
     setFocusPreference(fpVal as any);
@@ -423,7 +423,7 @@ export default function App() {
             <div className="flex flex-wrap items-center gap-3 sm:self-center">
 
               {/* Active streak */}
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold bg-amber-500 text-white shadow-md shadow-amber-500/10 hover:scale-105 transition-transform duration-150">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold bg-amber-500 text-white shadow-md shadow-amber-500/10 hover:scale-105 transition-transform duration-200">
                 <Flame className="w-4 h-4 fill-current animate-bounce" />
                 <span>Streak {streak} Days</span>
               </div>
@@ -455,7 +455,7 @@ export default function App() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
           {/* Sidebar nav (ponytail: shrink with map) */}
-          <nav className="lg:col-span-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl space-y-2 select-none shadow-sm flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-2 lg:gap-0">
+          <nav className="lg:col-span-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl space-y-2 select-none shadow-sm flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible">
             {navItems.map(item => (
               <button
                 key={item.key}
